@@ -1,1 +1,1 @@
-pyinstaller --onefile --windowed --icon=icono.ico run.py
+pyinstaller --onefile --windowed --icon=icono.ico --name=YTPrompt run.py

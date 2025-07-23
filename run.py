@@ -43,16 +43,17 @@ def descargar_y_parsear_subtitulos(url):
         if not line or re.match(r'^\d+$', line) or '-->' in line or re.match(r'^\d{2}:\d{2}:\d{2}\.', line):
             continue
         transcript.append(line)
+    transcript = extraer_texto_de_p(transcript)
     return transcript
 
 def obtener_transcripcion(video_id):
     """
     Obtiene la transcripción de un video de YouTube usando yt-dlp.
     Intenta en este orden:
-      1) auto-generated Spanish (es)
-      2) auto-generated English (en)
-      3) manual Spanish (es)
-      4) manual English (en)
+        1) auto-generated Spanish (es)
+        2) auto-generated English (en)
+        3) manual Spanish (es)
+        4) manual English (en)
     Devuelve una lista de líneas de texto, o None si no hay transcript.
     """
     ydl_opts = {
@@ -67,13 +68,14 @@ def obtener_transcripcion(video_id):
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(f'https://www.youtube.com/watch?v={video_id}', download=False)
+
     except Exception as e:
         print(f"❌ Error al extraer info del video: {e}")
         traceback.print_exc()
         return None
 
     # Fuentes en orden: auto-generated, luego manual
-    for source in ('automatic_captions', 'subtitles'):
+    for source in ('subtitles','automatic_captions'):
         captions = info.get(source) or {}
         for lang in ['es', 'en']:
             if lang in captions:
@@ -90,7 +92,7 @@ def obtener_transcripcion(video_id):
 
 def extraer_texto_de_p(lineas):
     """
-    Dada una lista de líneas como 
+    Dada una lista de líneas como
     '<p begin="..." end="..." style="...">Texto aquí</p>',
     devuelve una lista con 'Texto aquí' para cada línea válida.
     """
@@ -127,16 +129,14 @@ def main():
         root.destroy()
         return
 
-    transcript = extraer_texto_de_p(transcript)
-
     # Unir líneas y crear prompt
     transcript_text = ' '.join(transcript)
     prompt = f"""
-I'm going to give you the full transcript of a YouTube video. Please read it and write a summary in Spanish that is clear, well-structured, and easy to understand for someone who hasn't watched the video. It doesn't need to be super short; instead, focus on fully developing the main ideas, key points, and any final conclusions or takeaways. If possible, organize the summary into thematic sections or parts of the content, so it's easier to follow.
+    I'm going to give you the full transcript of a YouTube video. Please read it and write a summary in Spanish that is clear, well-structured, and easy to understand for someone who hasn't watched the video. It doesn't need to be super short; instead, focus on fully developing the main ideas, key points, and any final conclusions or takeaways. If possible, organize the summary into thematic sections or parts of the content, so it's easier to follow.
 
-Full transcript:
-{transcript_text}
-"""
+    Full transcript:
+    {transcript_text}
+    """
 
     pyperclip.copy(prompt)
     #messagebox.showinfo("Éxito", "Prompt copiado al portapapeles.")
@@ -144,3 +144,5 @@ Full transcript:
 
 if __name__ == "__main__":
     main()
+
+    
